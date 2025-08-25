@@ -1,0 +1,42 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs18",
+      "platform": "gcfv1",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": []
+    }
+  ],
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ]
+  },
+  "emulators": {
+    "functions": { "host": "127.0.0.1", "port": 5002 },
+    "firestore": { "host": "127.0.0.1", "port": 8081 },
+    "ui":        { "host": "127.0.0.1", "port": 4001 },
+    "hub":       { "host": "127.0.0.1", "port": 4401 },
+    "logging":   { "host": "127.0.0.1", "port": 4501 }
+  }
+}

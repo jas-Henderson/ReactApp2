@@ -1,26 +1,35 @@
+/* eslint-env node */
 module.exports = {
+  root: true,
   env: {
-    es6: true,
     node: true,
+    es2022: true,
   },
   parserOptions: {
-    "ecmaVersion": 2018,
+    ecmaVersion: 2022,
+    // Cloud Functions source uses CommonJS (require/exports)
+    sourceType: "script",
   },
-  extends: [
-    "eslint:recommended",
-    "google",
+  extends: ["eslint:recommended", "google"],
+  ignorePatterns: [
+    ".eslintrc.js",   // don't lint this config file
+    "node_modules/",
+    "coverage/",
+    "lib/",
   ],
   rules: {
-    "no-restricted-globals": ["error", "name", "length"],
-    "prefer-arrow-callback": "error",
-    "quotes": ["error", "double", {"allowTemplateLiterals": true}],
+    // keep your preferences, relax a couple noisy ones
+    "quotes": ["error", "double", { "allowTemplateLiterals": true }],
+    "require-jsdoc": "off",
+    "new-cap": "off",
+    // optional: turn these back on later if you want
+    "no-restricted-globals": "off",
+    "prefer-arrow-callback": "off",
   },
   overrides: [
     {
       files: ["**/*.spec.*"],
-      env: {
-        mocha: true,
-      },
+      env: { mocha: true },
       rules: {},
     },
   ],

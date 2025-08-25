@@ -1,12 +1,45 @@
-# React + Vite
+# 💇‍♀️ Salon Store (React + Vite + Firebase + Stripe)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An e-commerce demo app for **salon products**. Customers can browse, filter, add items to a cart 🛒, and complete a checkout flow via **Stripe**.  
 
-Currently, two official plugins are available:
+Frontend: **React (Vite)** ⚛️  
+Backend: **Firebase Functions + Firestore** 🔥  
+Payments: **Stripe Checkout** 💳  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **React 18 + Vite** ⚡ (with React Router)
+- **CSS** (utility classes; responsive, mobile-first)
+- **Firebase**  
+  - Firestore (products DB)  
+  - Cloud Functions (Express API + Stripe integration)  
+  - Emulator Suite (for local development)  
+- **Stripe Checkout** (test mode)  
+
+---
+
+## 📦 Prerequisites
+
+- Node.js **18+** (Node 20 is fine)  
+- Firebase CLI → `npm i -g firebase-tools`  
+- A Firebase project (this repo uses `reactapp2-8057f`)  
+- A Stripe account (use **test mode** 🧪)  
+
+---
+
+## 🚀 Local Setup
+
+```bash
+# clone the project
+git clone https://github.com/jas-Henderson/ReactApp2.git
+cd ReactApp2
+
+# install front-end deps
+npm i
+
+# install backend deps
+cd functions
+npm i
+cd ..

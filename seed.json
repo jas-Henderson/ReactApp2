@@ -4,7 +4,7 @@
       "name": "Argan Oil Shampoo 500ml",
       "description": "Hydrating shampoo with argan oil for dry hair.",
       "priceCents": 1799,
-      "images": ["https://images.unsplash.com/photo-1617692859346-3a7a6c35c2c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/argan-shampoo/800/600"],
       "category": "Hair Care",
       "tags": ["hydration", "argan"],
       "inStock": true
@@ -13,7 +13,7 @@
       "name": "Keratin Conditioner 500ml",
       "description": "Smooths and strengthens with keratin infusion.",
       "priceCents": 1999,
-      "images": ["https://images.unsplash.com/photo-1617692858775-6a18b9d7b70a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/keratin-conditioner/800/600"],
       "category": "Hair Care",
       "tags": ["keratin", "smooth"],
       "inStock": true
@@ -22,7 +22,7 @@
       "name": "Purple Toning Shampoo",
       "description": "Neutralizes brassiness for blondes & greys.",
       "priceCents": 1599,
-      "images": ["https://images.unsplash.com/photo-1629198740019-3aa8a4e3c7a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/purple-toning-shampoo/800/600"],
       "category": "Hair Care",
       "tags": ["toning", "purple", "blonde"],
       "inStock": true
@@ -31,7 +31,7 @@
       "name": "Thermal Styling Spray",
       "description": "Heat protectant up to 230°C / 450°F.",
       "priceCents": 1499,
-      "images": ["https://images.unsplash.com/photo-1629198943091-530e8a6cf34a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/thermal-styling-spray/800/600"],
       "category": "Styling",
       "tags": ["heat-protectant", "spray"],
       "inStock": true
@@ -40,7 +40,7 @@
       "name": "Volumizing Mousse",
       "description": "Lightweight lift with flexible hold.",
       "priceCents": 1299,
-      "images": ["https://images.unsplash.com/photo-1629198738009-59d4f8f1a9a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/volumizing-mousse/800/600"],
       "category": "Styling",
       "tags": ["volume", "mousse"],
       "inStock": true
@@ -49,7 +49,7 @@
       "name": "Strong Hold Hairspray",
       "description": "24-hour humidity resistance, brushable finish.",
       "priceCents": 1399,
-      "images": ["https://images.unsplash.com/photo-1629198758940-423d1fcf04a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/strong-hold-hairspray/800/600"],
       "category": "Styling",
       "tags": ["hold", "hairspray"],
       "inStock": true
@@ -58,7 +58,7 @@
       "name": "Ceramic Hair Dryer",
       "description": "Lightweight dryer with ionic technology.",
       "priceCents": 6599,
-      "images": ["https://images.unsplash.com/photo-1600181953911-f44b5d40b2e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/ceramic-hair-dryer/800/600"],
       "category": "Tools",
       "tags": ["dryer", "tools"],
       "inStock": true
@@ -67,7 +67,7 @@
       "name": "1\" Ceramic Flat Iron",
       "description": "Even heat plates, smooth sleek finish.",
       "priceCents": 7499,
-      "images": ["https://images.unsplash.com/photo-1596462502278-27bfdc403348?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/ceramic-flat-iron/800/600"],
       "category": "Tools",
       "tags": ["iron", "straightener"],
       "inStock": true
@@ -76,7 +76,7 @@
       "name": "20-Vol Cream Developer 32oz",
       "description": "Reliable lift for permanent color applications.",
       "priceCents": 1299,
-      "images": ["https://images.unsplash.com/photo-1600181975484-59e06c42fbaa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/cream-developer-20vol/800/600"],
       "category": "Color",
       "tags": ["developer", "20-vol"],
       "inStock": true
@@ -85,7 +85,7 @@
       "name": "Professional Hair Color – 6N",
       "description": "Natural dark blonde / light brown shade.",
       "priceCents": 1199,
-      "images": ["https://images.unsplash.com/photo-1600181967882-049bcd3d2e34?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+      "images": ["https://picsum.photos/seed/hair-color-6n/800/600"],
       "category": "Color",
       "tags": ["permanent", "6N"],
       "inStock": true

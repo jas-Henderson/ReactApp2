@@ -1,0 +1,42 @@
+.home-container {
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.home-logo {
+  width: 160px;
+  margin-bottom: 1.5rem;
+}
+
+.home-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.home-title .highlight {
+  color: #e91e63; /* Salon accent color */
+}
+
+.home-intro {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.5;
+  color: #444;
+}
+
+.home-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  background-color: #000;
+  color: #fff;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.home-btn:hover {
+  background-color: #333;
+}

@@ -5,7 +5,8 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #111;
-  background: #fff;
+  background: #fff; /* ✅ White background */
+  line-height: 1.5;
 }
 
 /* Top nav */
@@ -15,7 +16,7 @@ body {
   gap: 16px;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
-  background: #fff;
+  background: #fff; /* ✅ Light background for nav */
   position: sticky;
   top: 0;
   z-index: 10;
@@ -23,13 +24,17 @@ body {
 .logo { font-weight: 700; text-decoration: none; color: #111; }
 .spacer { flex: 1; }
 
-.cart-btn {
+.cart-btn, .logout-btn {
   background: #111;
   color: #fff;
   border: none;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+.cart-btn:hover, .logout-btn:hover {
+  background: #333;
 }
 
 /* Layout helpers */
@@ -40,15 +45,17 @@ body {
   gap: 16px;
 }
 .row { display: flex; gap: 12px; flex-wrap: wrap; }
+.column { display: flex; flex-direction: column; }
 
 /* Cards & product tiles */
 .card {
   border: 1px solid #eee;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   background: #fff;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 .card img { width: 100%; height: 200px; object-fit: cover; }
 .card-body { padding: 12px; display: flex; gap: 8px; flex-direction: column; }
@@ -67,7 +74,7 @@ body {
 input, select {
   padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 6px;
   font: inherit;
 }
 .btn {
@@ -75,10 +82,13 @@ input, select {
   color: #fff;
   border: none;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s;
 }
+.btn:hover { background: #333; }
 .btn.secondary { background: #f0f0f0; color: #111; }
+.btn.secondary:hover { background: #e2e2e2; }
 
 /* Cart sidebar */
 .sidebar {
@@ -88,7 +98,7 @@ input, select {
   width: 360px;
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 16px;
+  border-radius: 12px;
   max-height: 80vh;
   overflow: auto;
   padding: 12px;
@@ -103,9 +113,5 @@ input, select {
   padding: 12px;
   background: #f8fff1;
   border: 1px solid #e7f3d4;
-  border-radius: 12px;
+  border-radius: 8px;
 }
-
-/* links/buttons */
-a { color: inherit; }
-a.btn { text-decoration: none; }

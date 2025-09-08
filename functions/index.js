@@ -12,6 +12,7 @@ const db = admin.firestore();
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const WEB_APP_URL = process.env.WEB_APP_URL || 'http://localhost:5173';
+const ADMIN_SETUP_SECRET = process.env.ADMIN_SETUP_SECRET || 'dev-secret';
 
 // ---- Express setup
 const app = express();
@@ -34,7 +35,23 @@ function toProductResponse(doc) {
   return { id: doc.id, ...d };
 }
 
-// ---- Products list with filters/search
+// -------- Auth helper for admin-only routes --------
+async function requireAdmin(req, res, next) {
+  try {
+    const hdr = req.headers.authorization || '';
+    const match = hdr.match(/^Bearer (.+)$/i);
+    if (!match) return res.status(401).json({ error: 'Missing token' });
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    if (!decoded.admin) return res.status(403).json({ error: 'Admin only' });
+    req.user = decoded;
+    next();
+  } catch (e) {
+    console.error('Auth error:', e);
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// -------- Public products list with filters/search --------
 // GET /products?q=&category=&sort=
 app.get('/products', async (req, res) => {
   try {
@@ -67,7 +84,7 @@ app.get('/products', async (req, res) => {
   }
 });
 
-// Optional helper: GET /products/:id
+// GET /products/:id
 app.get('/products/:id', async (req, res) => {
   try {
     const doc = await db.collection('products').doc(req.params.id).get();
@@ -79,7 +96,7 @@ app.get('/products/:id', async (req, res) => {
   }
 });
 
-// ---- Seed products
+// -------- Seed products (dev convenience) --------
 // POST /admin/seed  body: { products: [{ name, priceCents, ...}] }
 app.post('/admin/seed', async (req, res) => {
   try {
@@ -113,7 +130,7 @@ app.post('/admin/seed', async (req, res) => {
   }
 });
 
-// ---- Stripe Checkout
+// -------- Stripe Checkout --------
 // POST /checkout/create-session  body: { items: [{ id, qty }] }
 app.post('/checkout/create-session', async (req, res) => {
   try {
@@ -153,6 +170,106 @@ app.post('/checkout/create-session', async (req, res) => {
     res.json({ url: session.url });
   } catch (e) {
     console.error('POST /checkout/create-session error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+// =================== ADMIN API (requires admin claim) ===================
+
+// GET /admin/products (same filters as public list)
+app.get('/admin/products', requireAdmin, async (req, res) => {
+  try {
+    const { q = '', category = '', sort = 'newest' } = req.query;
+    let ref = db.collection('products');
+    if (category) ref = ref.where('category', '==', category);
+    if (sort === 'price-asc') ref = ref.orderBy('priceCents', 'asc');
+    else if (sort === 'price-desc') ref = ref.orderBy('priceCents', 'desc');
+    else ref = ref.orderBy('createdAt', 'desc');
+
+    const snap = await ref.limit(100).get();
+    let products = snap.docs.map(toProductResponse);
+    if (q) {
+      const lower = q.toLowerCase();
+      products = products.filter(p =>
+        p.name?.toLowerCase().includes(lower) ||
+        (p.tags || []).some(t => String(t).toLowerCase().includes(lower)) ||
+        (p.description || '').toLowerCase().includes(lower)
+      );
+    }
+    res.json({ products });
+  } catch (e) {
+    console.error('GET /admin/products error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /admin/products  (create)
+app.post('/admin/products', requireAdmin, async (req, res) => {
+  try {
+    const { name, description = '', priceCents, images = [], category = 'Hair Care', tags = [], inStock = true } = req.body;
+    if (!name || typeof priceCents !== 'number') {
+      return res.status(400).json({ error: 'name & priceCents required' });
+    }
+    const ref = await db.collection('products').add({
+      name,
+      description,
+      priceCents: Number(priceCents) || 0,
+      images: Array.isArray(images) ? images : [],
+      category,
+      tags: Array.isArray(tags) ? tags : [],
+      inStock: !!inStock,
+      createdAt: serverTimestamp(),
+    });
+    const doc = await ref.get();
+    res.json({ id: ref.id, ...doc.data() });
+  } catch (e) {
+    console.error('POST /admin/products error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PUT /admin/products/:id  (update/merge)
+app.put('/admin/products/:id', requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const patch = { ...req.body };
+    delete patch.createdAt;
+    await db.collection('products').doc(id).set(patch, { merge: true });
+    const doc = await db.collection('products').doc(id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    res.json({ id, ...doc.data() });
+  } catch (e) {
+    console.error('PUT /admin/products/:id error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DELETE /admin/products/:id
+app.delete('/admin/products/:id', requireAdmin, async (req, res) => {
+  try {
+    await db.collection('products').doc(req.params.id).delete();
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('DELETE /admin/products/:id error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// One-time setup: grant admin claim to a user by email
+// Call with header x-setup-secret: <ADMIN_SETUP_SECRET>
+app.post('/admin/grant', async (req, res) => {
+  try {
+    if ((req.headers['x-setup-secret'] || '') !== ADMIN_SETUP_SECRET) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: 'email required' });
+    const user = await admin.auth().getUserByEmail(email);
+    await admin.auth().setCustomUserClaims(user.uid, { admin: true });
+    res.json({ ok: true, uid: user.uid });
+  } catch (e) {
+    console.error('POST /admin/grant error:', e);
     res.status(500).json({ error: e.message });
   }
 });

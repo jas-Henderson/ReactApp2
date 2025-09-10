@@ -4,38 +4,51 @@ const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
 const Stripe = require('stripe');
-const { FieldValue } = require('firebase-admin/firestore'); // serverTimestamp()
 require('dotenv').config({ path: '.env.local' });
 
-admin.initializeApp();
+// ---------- Robust Admin init (works even if CLI isn't logged in) ----------
+function getProjectId() {
+  if (process.env.GCLOUD_PROJECT) return process.env.GCLOUD_PROJECT;
+  if (process.env.FIREBASE_CONFIG) {
+    try {
+      const cfg = JSON.parse(process.env.FIREBASE_CONFIG);
+      if (cfg.projectId) return cfg.projectId;
+    } catch (_) {}
+  }
+  return 'reactapp2-8057f'; // fallback to your project id
+}
+
+if (!admin.apps.length) {
+  admin.initializeApp({ projectId: getProjectId() });
+}
 const db = admin.firestore();
 
+// Stripe / config
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const WEB_APP_URL = process.env.WEB_APP_URL || 'http://localhost:5173';
 const ADMIN_SETUP_SECRET = process.env.ADMIN_SETUP_SECRET || 'dev-secret';
 
-// ---- Express setup
+// ---------- Express ----------
 const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
-// Handle CORS preflight quickly
 app.options('*', cors({ origin: true }));
 
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-// Utilities
+// Helpers
 const serverTimestamp =
-  (FieldValue && FieldValue.serverTimestamp)
-    ? FieldValue.serverTimestamp
-    : () => new Date(); // fallback if FieldValue is unavailable
+  (admin.firestore.FieldValue &&
+    admin.firestore.FieldValue.serverTimestamp) ||
+  (() => new Date());
 
 function toProductResponse(doc) {
   const d = doc.data();
   return { id: doc.id, ...d };
 }
 
-// -------- Auth helper for admin-only routes --------
+// ---------- Admin auth middleware ----------
 async function requireAdmin(req, res, next) {
   try {
     const hdr = req.headers.authorization || '';
@@ -51,7 +64,8 @@ async function requireAdmin(req, res, next) {
   }
 }
 
-// -------- Public products list with filters/search --------
+// ===================== PUBLIC API =====================
+
 // GET /products?q=&category=&sort=
 app.get('/products', async (req, res) => {
   try {
@@ -96,7 +110,7 @@ app.get('/products/:id', async (req, res) => {
   }
 });
 
-// -------- Seed products (dev convenience) --------
+// Seed products (dev convenience)
 // POST /admin/seed  body: { products: [{ name, priceCents, ...}] }
 app.post('/admin/seed', async (req, res) => {
   try {
@@ -113,12 +127,12 @@ app.post('/admin/seed', async (req, res) => {
       batch.set(ref, {
         name: p.name,
         description: p.description || '',
-        priceCents: Number(p.priceCents) || 0, // cents integer
+        priceCents: Number(p.priceCents) || 0,
         images: Array.isArray(p.images) ? p.images : [],
         category: p.category || 'Hair Care',
         tags: Array.isArray(p.tags) ? p.tags : [],
         inStock: p.inStock ?? true,
-        createdAt: serverTimestamp(), // FieldValue.serverTimestamp() or Date fallback
+        createdAt: serverTimestamp(),
       });
     });
 
@@ -130,7 +144,7 @@ app.post('/admin/seed', async (req, res) => {
   }
 });
 
-// -------- Stripe Checkout --------
+// Create Stripe Checkout session
 // POST /checkout/create-session  body: { items: [{ id, qty }] }
 app.post('/checkout/create-session', async (req, res) => {
   try {
@@ -139,7 +153,6 @@ app.post('/checkout/create-session', async (req, res) => {
       return res.status(400).json({ error: 'No items' });
     }
 
-    // Build line items from Firestore
     const lineItems = [];
     for (const it of items) {
       const snap = await db.collection('products').doc(it.id).get();
@@ -174,10 +187,9 @@ app.post('/checkout/create-session', async (req, res) => {
   }
 });
 
+// ===================== ADMIN API =====================
 
-// =================== ADMIN API (requires admin claim) ===================
-
-// GET /admin/products (same filters as public list)
+// GET /admin/products
 app.get('/admin/products', requireAdmin, async (req, res) => {
   try {
     const { q = '', category = '', sort = 'newest' } = req.query;
@@ -189,12 +201,14 @@ app.get('/admin/products', requireAdmin, async (req, res) => {
 
     const snap = await ref.limit(100).get();
     let products = snap.docs.map(toProductResponse);
+
     if (q) {
       const lower = q.toLowerCase();
-      products = products.filter(p =>
-        p.name?.toLowerCase().includes(lower) ||
-        (p.tags || []).some(t => String(t).toLowerCase().includes(lower)) ||
-        (p.description || '').toLowerCase().includes(lower)
+      products = products.filter(
+        (p) =>
+          p.name?.toLowerCase().includes(lower) ||
+          (p.tags || []).some((t) => String(t).toLowerCase().includes(lower)) ||
+          (p.description || '').toLowerCase().includes(lower)
       );
     }
     res.json({ products });
@@ -204,13 +218,23 @@ app.get('/admin/products', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /admin/products  (create)
+// POST /admin/products
 app.post('/admin/products', requireAdmin, async (req, res) => {
   try {
-    const { name, description = '', priceCents, images = [], category = 'Hair Care', tags = [], inStock = true } = req.body;
+    const {
+      name,
+      description = '',
+      priceCents,
+      images = [],
+      category = 'Hair Care',
+      tags = [],
+      inStock = true,
+    } = req.body;
+
     if (!name || typeof priceCents !== 'number') {
       return res.status(400).json({ error: 'name & priceCents required' });
     }
+
     const ref = await db.collection('products').add({
       name,
       description,
@@ -221,6 +245,7 @@ app.post('/admin/products', requireAdmin, async (req, res) => {
       inStock: !!inStock,
       createdAt: serverTimestamp(),
     });
+
     const doc = await ref.get();
     res.json({ id: ref.id, ...doc.data() });
   } catch (e) {
@@ -229,12 +254,13 @@ app.post('/admin/products', requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /admin/products/:id  (update/merge)
+// PUT /admin/products/:id
 app.put('/admin/products/:id', requireAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const patch = { ...req.body };
     delete patch.createdAt;
+
     await db.collection('products').doc(id).set(patch, { merge: true });
     const doc = await db.collection('products').doc(id).get();
     if (!doc.exists) return res.status(404).json({ error: 'Not found' });
@@ -256,8 +282,8 @@ app.delete('/admin/products/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// One-time setup: grant admin claim to a user by email
-// Call with header x-setup-secret: <ADMIN_SETUP_SECRET>
+// POST /admin/grant  (one-time: grant admin claim to email)
+// header: x-setup-secret: <ADMIN_SETUP_SECRET>
 app.post('/admin/grant', async (req, res) => {
   try {
     if ((req.headers['x-setup-secret'] || '') !== ADMIN_SETUP_SECRET) {
@@ -274,5 +300,5 @@ app.post('/admin/grant', async (req, res) => {
   }
 });
 
-// ---- Gen-1 export (firebase-functions v4.x)
+// ---------- Export (Gen-1) ----------
 exports.api = functions.region('us-central1').https.onRequest(app);

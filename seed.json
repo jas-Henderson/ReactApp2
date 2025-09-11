@@ -7,7 +7,9 @@
       "images": ["https://picsum.photos/seed/argan-shampoo/800/600"],
       "category": "Hair Care",
       "tags": ["hydration", "argan"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 10
+
     },
     {
       "name": "Keratin Conditioner 500ml",
@@ -16,7 +18,8 @@
       "images": ["https://picsum.photos/seed/keratin-conditioner/800/600"],
       "category": "Hair Care",
       "tags": ["keratin", "smooth"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 5
     },
     {
       "name": "Purple Toning Shampoo",
@@ -25,7 +28,8 @@
       "images": ["https://picsum.photos/seed/purple-toning-shampoo/800/600"],
       "category": "Hair Care",
       "tags": ["toning", "purple", "blonde"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 8
     },
     {
       "name": "Thermal Styling Spray",
@@ -34,7 +38,8 @@
       "images": ["https://picsum.photos/seed/thermal-styling-spray/800/600"],
       "category": "Styling",
       "tags": ["heat-protectant", "spray"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 100
     },
     {
       "name": "Volumizing Mousse",
@@ -43,7 +48,8 @@
       "images": ["https://picsum.photos/seed/volumizing-mousse/800/600"],
       "category": "Styling",
       "tags": ["volume", "mousse"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 50
     },
     {
       "name": "Strong Hold Hairspray",
@@ -52,7 +58,8 @@
       "images": ["https://picsum.photos/seed/strong-hold-hairspray/800/600"],
       "category": "Styling",
       "tags": ["hold", "hairspray"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 75
     },
     {
       "name": "Ceramic Hair Dryer",
@@ -61,7 +68,8 @@
       "images": ["https://picsum.photos/seed/ceramic-hair-dryer/800/600"],
       "category": "Tools",
       "tags": ["dryer", "tools"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 30
     },
     {
       "name": "1\" Ceramic Flat Iron",
@@ -70,7 +78,8 @@
       "images": ["https://picsum.photos/seed/ceramic-flat-iron/800/600"],
       "category": "Tools",
       "tags": ["iron", "straightener"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 25
     },
     {
       "name": "20-Vol Cream Developer 32oz",
@@ -79,7 +88,8 @@
       "images": ["https://picsum.photos/seed/cream-developer-20vol/800/600"],
       "category": "Color",
       "tags": ["developer", "20-vol"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 100
     },
     {
       "name": "Professional Hair Color – 6N",
@@ -88,7 +98,10 @@
       "images": ["https://picsum.photos/seed/hair-color-6n/800/600"],
       "category": "Color",
       "tags": ["permanent", "6N"],
-      "inStock": true
+      "inStock": true,
+      "inventory": 50
     }
   ]
 }
+
+

@@ -2,21 +2,53 @@
 import axios from "axios";
 
 /**
- * Base Axios client for your Firebase Functions API.
- * Example baseURL (emulator):
- *   http://127.0.0.1:5002/reactapp2-8057f/us-central1/api
+ * Resolve the API base URL.
+ * Priority:
+ *  1) VITE_BACKEND_BASE_URL (explicit)
+ *  2) If using emulators (env or localhost), build the Functions emulator URL
+ *     http://127.0.0.1:5002/<projectId>/<region>/api
  */
-const baseURL = import.meta.env.VITE_BACKEND_BASE_URL;
+function resolveBaseURL() {
+  // 1) Explicit override
+  const explicit = import.meta.env.VITE_BACKEND_BASE_URL?.trim();
+  if (explicit) return explicit;
+
+  // 2) Emulator fallback
+  const usingEmulators =
+    import.meta.env.VITE_USE_EMULATORS === "1" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1";
+
+  if (usingEmulators) {
+    const projectId =
+      import.meta.env.VITE_FIREBASE_PROJECT_ID || "reactapp2-8057f";
+    const region = import.meta.env.VITE_FUNCTIONS_REGION || "us-central1";
+    const url = `http://127.0.0.1:5002/${projectId}/${region}/api`;
+    console.warn(
+      `[api] Using Functions emulator baseURL: ${url} (projectId=${projectId}, region=${region})`
+    );
+    return url;
+  }
+
+  // 3) If we get here, we’re likely in production but no URL provided.
+  // Throwing helps surface misconfiguration early.
+  throw new Error(
+    "VITE_BACKEND_BASE_URL is not set and emulator mode is off. Set VITE_BACKEND_BASE_URL in your .env."
+  );
+}
+
+const baseURL = resolveBaseURL();
+
 export const api = axios.create({
   baseURL,
   timeout: 15000,
 });
 
 /* ------------------------------------------------------------------ */
-/* Optional helpers to manage the Authorization header globally       */
+/* Auth header helpers                                                */
 /* ------------------------------------------------------------------ */
 
-/** Set a static Bearer token on the client (e.g., after login). */
+/** Set a Bearer token globally (call once after login). */
 export function setAuthToken(idToken) {
   if (idToken) {
     api.defaults.headers.common["Authorization"] = `Bearer ${idToken}`;
@@ -25,7 +57,7 @@ export function setAuthToken(idToken) {
   }
 }
 
-/** Clear any previously set Authorization header. */
+/** Clear Authorization header. */
 export function clearAuthToken() {
   delete api.defaults.headers.common["Authorization"];
 }
@@ -34,97 +66,108 @@ export function clearAuthToken() {
 /* Public APIs                                                        */
 /* ------------------------------------------------------------------ */
 
-/** List products (supports query, category, sort) */
 export async function listProducts(params = {}) {
   const { data } = await api.get("/products", { params });
   return data; // { products: [...] }
 }
 
-/** Get single product by ID */
 export async function getProduct(id) {
   const { data } = await api.get(`/products/${id}`);
   return data; // { id, name, priceCents, ... }
 }
 
-/** Create a Stripe Checkout session */
 export async function createCheckoutSession(items) {
   const { data } = await api.post("/checkout/create-session", { items });
   return data; // { url }
 }
 
 /* ------------------------------------------------------------------ */
-/* Auth / Admin helpers                                               */
+/* (Optional) Identity helpers (only if you later add these routes)   */
 /* ------------------------------------------------------------------ */
 
-/** Optional: whoami-style endpoint (if implemented on backend) */
 export async function fetchMe() {
   const { data } = await api.get("/me");
-  return data; // e.g., { user, roles, admin }
+  return data;
 }
 
-/** Check admin status for current Firebase user (token required) */
 export async function getAdminStatus(idToken) {
-  const { data } = await api.get("/admin/me", {
-    headers: { Authorization: `Bearer ${idToken}` },
-  });
-  return data; // { admin: true/false }
+  const { data } = await api.get("/admin/me", withAuth(idToken));
+  return data; // { admin: true/false, ... }
 }
 
 /* ------------------------------------------------------------------ */
-/* Admin Product APIs (require Bearer token)                          */
-/* Pass idToken if you are NOT using setAuthToken() above.            */
+/* Admin: Products (require admin token)                              */
 /* ------------------------------------------------------------------ */
 
-/** Admin: list products */
 export async function adminListProducts(idToken) {
   const { data } = await api.get("/admin/products", withAuth(idToken));
   return data; // { products: [...] }
 }
 
-/** Admin: create a product */
 export async function createProduct(product, idToken) {
   const { data } = await api.post("/admin/products", product, withAuth(idToken));
   return data; // { id, ...product }
 }
 
-/** Admin: update a product */
 export async function updateProduct(id, updates, idToken) {
   const { data } = await api.put(`/admin/products/${id}`, updates, withAuth(idToken));
   return data; // { id, ...updatedProduct }
 }
 
-/** Admin: delete a product */
 export async function deleteProduct(id, idToken) {
   const { data } = await api.delete(`/admin/products/${id}`, withAuth(idToken));
   return data; // { ok: true }
 }
 
-/** Admin: upload product image (expects a File) */
+/* ------------------------------------------------------------------ */
+/* 🔹 Admin: Upload product image (multipart/form-data)               */
+/* ------------------------------------------------------------------ */
+
 export async function uploadProductImage(file, idToken) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const { data } = await api.post("/admin/upload", formData, {
-    ...withAuth(idToken).headers && { headers: withAuth(idToken).headers },
-    headers: {
-      ...(withAuth(idToken).headers || {}),
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const cfg = withAuth(idToken);
+  cfg.headers = {
+    ...(cfg.headers || {}),
+    "Content-Type": "multipart/form-data",
+  };
 
-  return data; // { url: "https://..." }
+  const { data } = await api.post("/admin/upload", formData, cfg);
+  return data; // { url, path }
 }
 
 /* ------------------------------------------------------------------ */
-/* Utility                                                            */
+/* Admin: Alerts (low stock)                                          */
 /* ------------------------------------------------------------------ */
 
-/**
- * Build a config object with Authorization header if an idToken is provided.
- * If you already called setAuthToken(), you can omit idToken.
- */
+export async function adminListAlerts(idToken) {
+  const { data } = await api.get("/admin/alerts", withAuth(idToken));
+  return data; // { unresolved: [...], recentResolved: [...] }
+}
+
+export async function resolveAlert(alertId, idToken) {
+  const { data } = await api.post(
+    `/admin/alerts/${alertId}/resolve`,
+    {},
+    withAuth(idToken)
+  );
+  return data; // { ok: true }
+}
+
+/* ------------------------------------------------------------------ */
+/* Local Dev: Seed products                                           */
+/* ------------------------------------------------------------------ */
+
+export async function seedProducts(payload /* { products: [...] } */, idToken) {
+  const { data } = await api.post("/admin/seed", payload, withAuth(idToken));
+  return data; // { ok: true, count }
+}
+
+/* ------------------------------------------------------------------ */
+/* Util                                                               */
+/* ------------------------------------------------------------------ */
+
 function withAuth(idToken) {
-  return idToken
-    ? { headers: { Authorization: `Bearer ${idToken}` } }
-    : {}; // rely on api.defaults if setAuthToken() was used
+  return idToken ? { headers: { Authorization: `Bearer ${idToken}` } } : {};
 }

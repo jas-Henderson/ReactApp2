@@ -9,7 +9,14 @@ import {
   createUserWithEmailAndPassword,
   connectAuthEmulator,
 } from "firebase/auth";
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+} from "firebase/firestore";
 
+// -------------------------
+// Firebase config
+// -------------------------
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -19,16 +26,30 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize app + auth
+// -------------------------
+// Initialize app, auth, and db
+// -------------------------
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // -------------------------
 // Emulator support (local dev)
 // -------------------------
-if (import.meta.env.VITE_USE_EMULATORS === "1") {
-  // Default Firebase Auth emulator runs on port 9099
-  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+if (
+  import.meta.env.VITE_USE_EMULATORS === "1" ||
+  location.hostname === "localhost" ||
+  location.hostname === "127.0.0.1"
+) {
+  // Auth Emulator
+  try {
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  } catch (_) {}
+
+  // Firestore Emulator
+  try {
+    connectFirestoreEmulator(db, "127.0.0.1", 8081);
+  } catch (_) {}
 }
 
 // -------------------------
@@ -50,3 +71,5 @@ export const signUpWithEmail = (email, password) =>
 
 // Sign out
 export const signOutUser = () => signOut(auth);
+
+export default app;
